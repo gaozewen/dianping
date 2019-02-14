@@ -1,5 +1,7 @@
 import RequestUtil from "../../utils/request";
 import UrlUtil from "../../utils/url";
+import {FETCH_DATA} from "../middleware/api";
+import {ProductSchema} from "./entities/products";
 
 export const types = {
   FETCH_LIKES_REQUEST: "HOME/FETCH_LIKES_REQUEST", // 获取猜你喜欢请求
@@ -8,41 +10,29 @@ export const types = {
 };
 
 export const actions = {
+
   loadLikes: () => {
     return (dispatch, getState) => {
-      dispatch(fetchLikesRequest());// 请求开始发送
-      return RequestUtil.get(UrlUtil.getProductList(0, 10)).then(
-        data => {
-          dispatch(fetchLikesSuccess(data));// 更新 ui 状态
-          // todo: 更新领域状态 products
-          // dispatch(...(data));// 更新 领域 状态
-          // dispatch(...(data));// 更新 领域 状态
-        },
-        error => {
-          dispatch(fetchLikesFailure(error))
-        },
-      )
-    }
-  }
+      const url = UrlUtil.getProductList(0, 10); // 发送请求的 url
+      return dispatch(fetchLikes(url));
+    };
+  },
 };
 
 // 内部使用的 actionCreators
-const fetchLikesRequest = () => ({type: types.FETCH_LIKES_REQUEST});
-const fetchLikesSuccess = (data) => ({type: types.FETCH_LIKES_SUCCESS, data});
-const fetchLikesFailure = (error) => ({type: types.FETCH_LIKES_FAILURE, error});
+const fetchLikes = (url, params) => ({
+  [FETCH_DATA]: {
+    types: [types.FETCH_LIKES_REQUEST, types.FETCH_LIKES_SUCCESS, types.FETCH_LIKES_FAILURE],
+    url,
+    schema: ProductSchema,
+  },
+  params
+});
 
 
 const reducer = (state = {}, action) => {
-  switch (action.type) {
-    case types.FETCH_LIKES_REQUEST:
-      // TODO:界面 loading状态开启
-      return state;
-    case types.FETCH_LIKES_SUCCESS:
-      return state;
-    case types.FETCH_LIKES_FAILURE:
-      return state;
-    default:
-      return state;
+  if (action.response && action.response.products) {
+    return {...state, ...action.response.products}
   }
 };
 
